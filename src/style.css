@@ -1,1 +1,57 @@
+html {
+  box-sizing: border-box;
+  height: 100%;
+}
 
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+}
+
+*{
+  margin: 0;
+  padding: 0;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+input,
+button,
+textarea,
+select {
+  font: inherit;
+}
+
+ul {
+  list-style: none;
+}
+
+a {
+  text-decoration: none;
+}
+
+body {
+  background-color: #f1f1f1;
+  display: flex;
+  justify-content: center;
+}
+
+h1 {
+  margin-bottom: 10px;
+  font-size: 35px;
+  text-align: center;
+}
+
+button {
+  cursor: pointer;
+  padding: 10px 20px;
+  font-size: 18px;
+}
+
+.page {
+  background-color: #fff;
+}

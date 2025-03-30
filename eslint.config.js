@@ -11,6 +11,9 @@ export default [
     languageOptions: {
       parser: typescriptParser,
       sourceType: 'module',
+      globals: {
+        Node: 'readonly',
+      },
     },
     plugins: {
       unicornPlugin,
@@ -21,6 +24,7 @@ export default [
       'unicorn/prevent-abbreviations': 'off',
       'unicorn/no-null': 'off',
       '@typescript-eslint/no-unused-vars': 'warn',
+      '@typescript-eslint/explicit-function-return-type': ['error'],
       'prettier/prettier': ['error'],
     },
   },
