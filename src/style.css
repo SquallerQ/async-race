@@ -53,10 +53,30 @@ button {
 }
 
 .page {
-  background-color: #fff;
+  background-color: #ffffff;
 }
 
+.forms__container {
 
+}
+.forms__create {
+  padding: 5px 0;
+  display: flex;
+  align-items: center;
+  gap: 5px
+}
+.forms__create-input {
+  height: 32px;
+}
+.forms__create-button {
+  padding: 5px 10px;
+  
+  background-color: #c0ffaa;
+  border: 1px solid #000;
+  border-radius: 3px;
+
+  cursor: pointer;
+}
 .track__container {
   display: flex;
   flex-direction: column;
@@ -104,8 +124,16 @@ button {
   justify-content: space-between;
   align-items: end;
 }
+.car_flag-container svg:last-child {
+  margin-bottom: 6px;
+}
 .track__road {
-  height: 2px;
+  margin-top: -7px;
+  height: 5px;
   width: 100%;
   background-color: #ccc;
+}
+
+svg {
+  flex-shrink: 0;
 }
