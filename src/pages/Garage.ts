@@ -1,5 +1,16 @@
 import { Router } from '../router';
-import { doc, HTMLElement, HTMLHeadingElement } from '../browserTypes';
+import {
+  doc,
+  HTMLElement,
+  HTMLHeadingElement,
+  HTMLInputElement,
+  HTMLButtonElement,
+  HTMLSpanElement,
+  SVGUseElement,
+  setTimeout,
+  console,
+  fetch,
+} from '../browserTypes';
 
 interface Car {
   name: string;
@@ -12,25 +23,18 @@ export class Garage {
   private totalCars: number = 0;
   private title: HTMLHeadingElement;
   private tracksContainer: HTMLElement;
+  private selectedCarId: number | null = null;
+  private updateNameInput: HTMLInputElement;
+  private updateColorInput: HTMLInputElement;
+  private updateButton: HTMLButtonElement;
 
   constructor(router: Router) {
     this.router = router;
     this.title = doc.createElement('h1');
     this.tracksContainer = doc.createElement('div');
-  }
-  public async fetchCars(page: number = 1): Promise<Car[]> {
-    const response = await fetch(
-      `http://127.0.0.1:3000/garage?_page=${page}&_limit=10`,
-      { method: 'GET' },
-    );
-    if (!response.ok) {
-      throw new Error('Failed');
-    }
-
-    const totalCount = response.headers.get('X-Total-Count');
-    this.totalCars = totalCount ? parseInt(totalCount, 10) : 0;
-    this.updateTitle();
-    return await response.json();
+    this.updateNameInput = doc.createElement('input');
+    this.updateColorInput = doc.createElement('input');
+    this.updateButton = doc.createElement('button');
   }
 
   public render(): Node {
@@ -46,21 +50,55 @@ export class Garage {
     const nameInput = doc.createElement('input');
     nameInput.type = 'text';
     nameInput.className = 'forms__create-input';
+    nameInput.placeholder = 'Enter car name';
 
     const colorInput = doc.createElement('input');
     colorInput.type = 'color';
     colorInput.value = '#3cc8e0';
     colorInput.className = 'forms__create-input';
 
+    const createError = doc.createElement('span');
+    createError.className = 'forms__error';
+    createError.style.display = 'none';
+
     const createButton = doc.createElement('button');
     createButton.textContent = 'Create';
     createButton.className = 'forms__create-button';
     createButton.addEventListener('click', () =>
-      this.createCar(nameInput.value, colorInput.value),
+      this.createCar(nameInput.value, colorInput.value, nameInput),
     );
 
-    createForm.append(nameInput, colorInput, createButton);
-    formsContainer.append(createForm);
+    createForm.append(nameInput, colorInput, createButton, createError);
+
+    const updateForm = doc.createElement('div');
+    updateForm.className = 'forms__update';
+
+    this.updateNameInput.type = 'text';
+    this.updateNameInput.className = 'forms__update-input';
+    this.updateNameInput.disabled = true;
+
+    this.updateColorInput.type = 'color';
+    this.updateColorInput.value = '#3cc8e0';
+    this.updateColorInput.className = 'forms__update-input';
+    this.updateColorInput.disabled = true;
+
+    this.updateButton.textContent = 'Update';
+    this.updateButton.className = 'forms__update-button';
+    this.updateButton.disabled = true;
+    this.updateButton.addEventListener('click', () =>
+      this.updateCar(
+        this.selectedCarId,
+        this.updateNameInput.value,
+        this.updateColorInput.value,
+        this.updateNameInput,
+      ),
+    );
+    updateForm.append(
+      this.updateNameInput,
+      this.updateColorInput,
+      this.updateButton,
+    );
+    formsContainer.append(createForm, updateForm);
 
     this.title.textContent = `Garage (${this.totalCars} cars)`;
 
@@ -70,49 +108,35 @@ export class Garage {
     button.textContent = 'Go to Winners';
     button.addEventListener('click', () => this.router.navigateTo('winners'));
 
-    container.append(createForm, this.title, this.tracksContainer, button);
+    container.append(formsContainer, this.title, this.tracksContainer, button);
 
-    this.fetchCars()
-      .then(cars => {
-        cars.forEach(car => {
-          const track = this.createTrack(car);
-          this.tracksContainer.append(track);
-        });
-      })
-      .catch(error => {
-        throw new Error('Failed to load cars');
-      });
+    this.loadCars();
 
     return container;
   }
 
-  private updateTitle(): void {
-    this.title.textContent = `Garage (${this.totalCars} cars)`;
-  }
-  private async createCar(name: string, color: string): Promise<void> {
-    if (!name.trim()) {
-      console.error('Failed');
-      return;
+  public async fetchCars(page: number = 1, limit: number = 10): Promise<Car[]> {
+    const response = await fetch(
+      `http://127.0.0.1:3000/garage?_page=${page}&_limit=${limit}`,
+      { method: 'GET' },
+    );
+    if (!response.ok) {
+      throw new Error('Failed to fetch cars');
     }
 
+    const totalCount = response.headers.get('X-Total-Count');
+    this.totalCars = totalCount ? parseInt(totalCount, 10) : 0;
+    this.updateTitle();
+    return await response.json();
+  }
+
+  private async loadCars(): Promise<void> {
     try {
-      const response = await fetch('http://127.0.0.1:3000/garage', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name, color }),
+      const cars = await this.fetchCars();
+      cars.forEach((car) => {
+        const track = this.createTrack(car);
+        this.tracksContainer.append(track);
       });
-
-      if (!response.ok) {
-        throw new Error('Failed');
-      }
-
-      const newCar: Car = await response.json();
-      const track = this.createTrack(newCar);
-      this.tracksContainer.append(track);
-      this.totalCars += 1;
-      this.updateTitle();
     } catch (error) {
       console.error(error);
     }
@@ -121,6 +145,7 @@ export class Garage {
   private createTrack(car: Car): Node {
     const trackContainer = doc.createElement('div');
     trackContainer.className = 'track__container';
+    trackContainer.setAttribute('data-id', car.id.toString());
 
     const buttonsContainer = doc.createElement('div');
     buttonsContainer.className = 'track__buttons-container';
@@ -134,6 +159,9 @@ export class Garage {
     const selectButton = doc.createElement('button');
     selectButton.className = 'buttons-container__select';
     selectButton.textContent = 'Select';
+    selectButton.addEventListener('click', () =>
+      this.selectCar(car.id, carName, useElement),
+    );
 
     const removeButton = doc.createElement('button');
     removeButton.className = 'buttons-container__remove';
@@ -190,7 +218,100 @@ export class Garage {
     return trackContainer;
   }
 
-  private async removeCar(carId: number, trackContainer: HTMLElement): Promise<void> {
+  private async createCar(
+    name: string,
+    color: string,
+    nameInput: HTMLInputElement,
+  ): Promise<void> {
+    if (!name.trim()) {
+      const originalPlaceholder = nameInput.placeholder;
+      nameInput.placeholder = 'Name cannot be empty';
+      nameInput.value = '';
+      nameInput.focus();
+      setTimeout(() => {
+        nameInput.placeholder = originalPlaceholder;
+      }, 1000);
+      return;
+    }
+
+    try {
+      const response = await fetch('http://127.0.0.1:3000/garage', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, color }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create car');
+      }
+
+      const newCar: Car = await response.json();
+      const track = this.createTrack(newCar);
+      this.tracksContainer.append(track);
+      this.totalCars += 1;
+      this.updateTitle();
+      nameInput.value = '';
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  private async updateCar(
+    carId: number | null,
+    name: string,
+    color: string,
+    nameInput: HTMLInputElement,
+  ): Promise<void> {
+    if (!carId) {
+      console.log('No car selected');
+      return;
+    }
+    if (!name.trim()) {
+      const originalPlaceholder = nameInput.placeholder;
+      nameInput.placeholder = 'Name cannot be empty';
+      nameInput.value = '';
+      nameInput.focus();
+      setTimeout(() => {
+        nameInput.placeholder = originalPlaceholder;
+      }, 1000);
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://127.0.0.1:3000/garage/${carId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, color }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update car');
+      }
+
+      const updatedCar: Car = await response.json();
+      const track = this.tracksContainer.querySelector(`
+        .track__container[data-id="${carId}"]`);
+      if (track) {
+        const carName = track.querySelector('span');
+        const carSvgUse = track.querySelector('svg use');
+        if (carName) carName.textContent = updatedCar.name;
+        if (carSvgUse) carSvgUse.setAttribute('fill', updatedCar.color);
+      }
+
+      this.resetUpdateForm();
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  private async removeCar(
+    carId: number,
+    trackContainer: HTMLElement,
+  ): Promise<void> {
     try {
       const response = await fetch(`http://127.0.0.1:3000/garage/${carId}`, {
         method: 'DELETE',
@@ -205,5 +326,34 @@ export class Garage {
     } catch (error) {
       console.error(error);
     }
+  }
+
+  private selectCar(
+    carId: number,
+    carNameElement: HTMLSpanElement,
+    carSvgUse: SVGUseElement,
+  ): void {
+    this.selectedCarId = carId;
+    const currentName = carNameElement.textContent || '';
+    const currentColor = carSvgUse.getAttribute('fill') || '#3cc8e0';
+
+    this.updateNameInput.value = currentName;
+    this.updateColorInput.value = currentColor;
+    this.updateNameInput.disabled = false;
+    this.updateColorInput.disabled = false;
+    this.updateButton.disabled = false;
+  }
+
+  private resetUpdateForm(): void {
+    this.selectedCarId = null;
+    this.updateNameInput.value = '';
+    this.updateColorInput.value = '#3cc8e0';
+    this.updateNameInput.disabled = true;
+    this.updateColorInput.disabled = true;
+    this.updateButton.disabled = true;
+  }
+
+  private updateTitle(): void {
+    this.title.textContent = `Garage (${this.totalCars})`;
   }
 }
