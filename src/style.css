@@ -41,9 +41,10 @@ body {
 }
 
 h1 {
+  margin-left: 10px;
   margin-bottom: 10px;
-  font-size: 35px;
-  text-align: center;
+  font-size: 30px;
+  text-align: left;
 }
 
 button {
@@ -89,6 +90,13 @@ button {
   border-radius: 3px;
 
   cursor: pointer;
+}
+.actual__page {
+  margin-left: 10px;
+  padding: 5px 10px;
+  font-size: 16px;
+  background-color: #000;
+  color: #fff;
 }
 .track__container {
   display: flex;
@@ -149,4 +157,26 @@ button {
 
 svg {
   flex-shrink: 0;
+}
+
+.pagination {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  align-items: center;
+}
+
+.pagination__button {
+  padding: 5px 10px;
+  min-width: 80px;
+  background-color: #c0ffaa;
+  border: 1px solid #000;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.pagination__button:disabled {
+  background-color: #ff9191;
+  opacity: 0.5;
+  cursor: not-allowed;
 }

@@ -3,9 +3,11 @@ import { doc } from '../browserTypes';
 
 export class Winners {
   private router: Router;
+  private garagePage: number;
 
   constructor(router: Router) {
     this.router = router;
+    this.garagePage = router.getState().currentPage || 1;
   }
 
   public render(): Node {
@@ -17,7 +19,9 @@ export class Winners {
 
     const button = doc.createElement('button');
     button.textContent = 'Go to Garage Page';
-    button.addEventListener('click', () => this.router.navigateTo('garage'));
+    button.addEventListener('click', () => {
+      this.router.navigateTo('garage', { currentPage: this.garagePage });
+    });
 
     container.append(title, button);
 

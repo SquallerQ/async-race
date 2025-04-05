@@ -27,6 +27,10 @@ export class Garage {
   private updateNameInput: HTMLInputElement;
   private updateColorInput: HTMLInputElement;
   private updateButton: HTMLButtonElement;
+  private currentPage: number;
+  private pageIndicator: HTMLSpanElement;
+  private prevButton: HTMLButtonElement;
+  private nextButton: HTMLButtonElement;
 
   constructor(router: Router) {
     this.router = router;
@@ -35,6 +39,10 @@ export class Garage {
     this.updateNameInput = doc.createElement('input');
     this.updateColorInput = doc.createElement('input');
     this.updateButton = doc.createElement('button');
+    this.pageIndicator = doc.createElement('span');
+    this.prevButton = doc.createElement('button');
+    this.nextButton = doc.createElement('button');
+    this.currentPage = router.getState().currentPage || 1;
   }
 
   public render(): Node {
@@ -101,21 +109,49 @@ export class Garage {
     formsContainer.append(createForm, updateForm);
 
     this.title.textContent = `Garage (${this.totalCars} cars)`;
+    this.pageIndicator.className = 'actual__page';
+    this.pageIndicator.textContent = `Page ${this.currentPage}`;
 
     this.tracksContainer.className = 'tracks__container';
 
+    const paginationContainer = doc.createElement('div');
+    paginationContainer.className = 'pagination';
+
+    this.prevButton.textContent = 'Previous';
+    this.prevButton.className = 'pagination__button';
+    this.prevButton.addEventListener('click', () =>
+      this.loadCars(this.currentPage - 1),
+    );
+
+    this.nextButton.textContent = 'Next';
+    this.nextButton.className = 'pagination__button';
+    this.nextButton.addEventListener('click', () =>
+      this.loadCars(this.currentPage + 1),
+    );
+
+    paginationContainer.append(this.prevButton, this.nextButton);
+
     const button = doc.createElement('button');
     button.textContent = 'Go to Winners';
-    button.addEventListener('click', () => this.router.navigateTo('winners'));
+    button.addEventListener('click', () => {
+      this.router.navigateTo('winners', { currentPage: this.currentPage });
+    });
 
-    container.append(formsContainer, this.title, this.tracksContainer, button);
+    container.append(
+      formsContainer,
+      this.title,
+      this.pageIndicator,
+      this.tracksContainer,
+      paginationContainer,
+      button,
+    );
 
-    this.loadCars();
+    this.loadCars(this.currentPage);
 
     return container;
   }
 
-  public async fetchCars(page: number = 1, limit: number = 10): Promise<Car[]> {
+  public async fetchCars(page: number = 1, limit: number = 7): Promise<Car[]> {
     const response = await fetch(
       `http://127.0.0.1:3000/garage?_page=${page}&_limit=${limit}`,
       { method: 'GET' },
@@ -130,13 +166,23 @@ export class Garage {
     return await response.json();
   }
 
-  private async loadCars(): Promise<void> {
+  private async loadCars(page: number): Promise<void> {
+    const totalPages = Math.ceil(this.totalCars / 7);
+    if (page < 1 || (this.totalCars > 0 && page > totalPages)) return;
+    this.currentPage = page;
+
     try {
-      const cars = await this.fetchCars();
+      const cars = await this.fetchCars(this.currentPage, 7);
+      this.tracksContainer.replaceChildren();
       cars.forEach((car) => {
         const track = this.createTrack(car);
         this.tracksContainer.append(track);
       });
+
+      this.pageIndicator.textContent = `Page ${this.currentPage}`;
+      this.prevButton.disabled = this.currentPage === 1;
+      this.nextButton.disabled =
+        this.currentPage === totalPages || cars.length < 7;
     } catch (error) {
       console.error(error);
     }
@@ -252,6 +298,7 @@ export class Garage {
       this.tracksContainer.append(track);
       this.totalCars += 1;
       this.updateTitle();
+      this.loadCars(this.currentPage);
       nameInput.value = '';
     } catch (error) {
       console.error(error);
@@ -323,6 +370,7 @@ export class Garage {
       trackContainer.remove();
       this.totalCars -= 1;
       this.updateTitle();
+      this.loadCars(this.currentPage);
     } catch (error) {
       console.error(error);
     }

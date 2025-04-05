@@ -11,9 +11,12 @@ export class Router {
     win.addEventListener('popstate', () => this.renderPage());
   }
 
-  public navigateTo(page: string): void {
-    hist.pushState({}, '', `/${page}`);
+  public navigateTo(page: string, state: { [key: string]: any } = {}): void {
+    hist.pushState(state, '', `/${page}`);
     this.renderPage();
+  }
+  public getState(): { [key: string]: any } {
+    return hist.state || {};
   }
 
   private renderPage(): void {
