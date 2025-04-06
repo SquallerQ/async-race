@@ -14,16 +14,27 @@ export class Winners {
     const container = doc.createElement('div');
     container.className = 'page';
 
-    const title = doc.createElement('h1');
-    title.textContent = 'Winners Page';
+    const routerButtonsContainer = doc.createElement('div');
+    routerButtonsContainer.className = 'router-buttons__container';
 
-    const button = doc.createElement('button');
-    button.textContent = 'Go to Garage Page';
-    button.addEventListener('click', () => {
+    const goToGarage = doc.createElement('button');
+    goToGarage.className = 'router-buttons__button';
+    goToGarage.textContent = 'To Garage';
+    goToGarage.addEventListener('click', () => {
       this.router.navigateTo('garage', { currentPage: this.garagePage });
     });
 
-    container.append(title, button);
+    const goToWinnersButton = doc.createElement('button');
+    goToWinnersButton.className = 'router-buttons__button';
+    goToWinnersButton.textContent = 'To Winners';
+    goToWinnersButton.disabled = true;
+
+    routerButtonsContainer.append(goToGarage, goToWinnersButton);
+
+    const title = doc.createElement('h1');
+    title.textContent = 'Winners Page';
+
+    container.append(routerButtonsContainer, title);
 
     return container;
   }

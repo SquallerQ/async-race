@@ -56,6 +56,24 @@ button {
 .page {
   background-color: #ffffff;
 }
+.router-buttons__container {
+  display: flex;
+  padding: 5px;
+  gap: 10px;
+}
+
+.router-buttons__button {
+  padding: 5px 10px;
+  min-width: 80px;
+  background-color: #c0ffaa;
+  border: 1px solid #000;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.router-buttons__button:disabled {
+  cursor: auto;
+  opacity: 0.5;
+}
 
 .forms__container {
   padding: 5px;
@@ -91,6 +109,19 @@ button {
 
   cursor: pointer;
 }
+
+.menu-buttons__container {
+  padding: 5px;
+}
+.menu-buttons__generate-btn {
+  padding: 5px 10px;
+  min-width: 80px;
+  background-color: #c0ffaa;
+  border: 1px solid #000;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
 .actual__page {
   margin-left: 10px;
   padding: 5px 10px;
@@ -178,5 +209,5 @@ svg {
 .pagination__button:disabled {
   background-color: #ff9191;
   opacity: 0.5;
-  cursor: not-allowed;
+  cursor: auto;
 }

@@ -49,6 +49,23 @@ export class Garage {
     const container = doc.createElement('div');
     container.className = 'page';
 
+    const routerButtonsContainer = doc.createElement('div');
+    routerButtonsContainer.className = 'router-buttons__container';
+
+    const goToGarage = doc.createElement('button');
+    goToGarage.className = 'router-buttons__button';
+    goToGarage.textContent = 'To Garage';
+    goToGarage.disabled = true;
+
+    const goToWinnersButton = doc.createElement('button');
+    goToWinnersButton.className = 'router-buttons__button';
+    goToWinnersButton.textContent = 'To Winners';
+    goToWinnersButton.addEventListener('click', () => {
+      this.router.navigateTo('winners', { currentPage: this.currentPage });
+    });
+
+    routerButtonsContainer.append(goToGarage, goToWinnersButton);
+
     const formsContainer = doc.createElement('div');
     formsContainer.className = 'forms__container';
 
@@ -106,6 +123,17 @@ export class Garage {
       this.updateColorInput,
       this.updateButton,
     );
+
+    const menuButtonsContainer = doc.createElement('div');
+    menuButtonsContainer.className = 'menu-buttons__container';
+
+    const generateButton = doc.createElement('button');
+    generateButton.textContent = 'Generate 100 Cars';
+    generateButton.className = 'menu-buttons__generate-btn';
+    generateButton.addEventListener('click', () => this.addHundredCars());
+
+    menuButtonsContainer.append(generateButton);
+
     formsContainer.append(createForm, updateForm);
 
     this.title.textContent = `Garage (${this.totalCars} cars)`;
@@ -131,19 +159,14 @@ export class Garage {
 
     paginationContainer.append(this.prevButton, this.nextButton);
 
-    const button = doc.createElement('button');
-    button.textContent = 'Go to Winners';
-    button.addEventListener('click', () => {
-      this.router.navigateTo('winners', { currentPage: this.currentPage });
-    });
-
     container.append(
+      routerButtonsContainer,
       formsContainer,
+      menuButtonsContainer,
       this.title,
       this.pageIndicator,
       this.tracksContainer,
       paginationContainer,
-      button,
     );
 
     this.loadCars(this.currentPage);
@@ -403,5 +426,77 @@ export class Garage {
 
   private updateTitle(): void {
     this.title.textContent = `Garage (${this.totalCars})`;
+  }
+
+  private async addHundredCars(): Promise<void> {
+    const carNames = [
+      'Tesla',
+      'BMW',
+      'Audi',
+      'Porsche',
+      'Ferrari',
+      'Lamborghini',
+      'Mercedes',
+      'Ford',
+      'Chevrolet',
+      'Toyota',
+      'Honda',
+      'Nissan',
+      'Subaru',
+    ];
+    const carModels = [
+      'Model S',
+      'M5',
+      'A4',
+      'C-Class',
+      'B4',
+      'CC-2',
+      'MC-6',
+      '488',
+      '911',
+      'MX-5',
+      'WRX',
+      'MCA',
+    ];
+    const carColors = [
+      '#FF0000',
+      '#00FF00',
+      '#0000FF',
+      '#FFFF00',
+      '#FF00FF',
+      '#00FFFF',
+      '#00FFFF',
+      '#FFA500',
+      '#A52A2A',
+      '#800080',
+    ];
+
+    try {
+      for (let i = 0; i < 100; i++) {
+        const randomBrand =
+          carNames[Math.floor(Math.random() * carNames.length)];
+        const randomModel =
+          carModels[Math.floor(Math.random() * carModels.length)];
+        const name = `${randomBrand} ${randomModel}`;
+        const color = carColors[Math.floor(Math.random() * carColors.length)];
+        const response = await fetch('http://127.0.0.1:3000/garage', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ name, color }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to add car');
+        }
+      }
+
+      this.totalCars += 100;
+      this.updateTitle();
+      this.loadCars(this.currentPage);
+    } catch (error) {
+      console.error(error);
+    }
   }
 }
