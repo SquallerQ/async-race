@@ -55,6 +55,7 @@ button {
 
 .page {
   background-color: #ffffff;
+  width: 90%;
 }
 .router-buttons__container {
   display: flex;
@@ -111,17 +112,28 @@ button {
 }
 
 .menu-buttons__container {
+  gap: 10px;
+  display: flex;
+  max-width: 280px;
+  flex-wrap: wrap;
   padding: 5px;
 }
 .menu-buttons__generate-btn {
   padding: 5px 10px;
-  min-width: 80px;
+  width: 250px;
   background-color: #c0ffaa;
   border: 1px solid #000;
   border-radius: 3px;
   cursor: pointer;
 }
-
+.menu-buttons__start-btn, .menu-buttons__reset-btn {
+  width: 120px;
+  padding: 5px 10px;
+  background-color: #c0ffaa;
+  border: 1px solid #000;
+  border-radius: 3px;
+  cursor: pointer;
+}
 .actual__page {
   margin-left: 10px;
   padding: 5px 10px;
@@ -175,9 +187,12 @@ button {
   display: flex;
   justify-content: space-between;
   align-items: end;
+
+  margin-top: -30px;
 }
 .car_flag-container svg:last-child {
   margin-bottom: 6px;
+  margin-right: 70px;
 }
 .track__road {
   margin-top: -7px;
@@ -210,4 +225,31 @@ svg {
   background-color: #ff9191;
   opacity: 0.5;
   cursor: auto;
+}
+
+.winner-message {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 20px 40px;
+  border-radius: 10px;
+  font-size: 24px;
+  font-family: Arial, sans-serif;
+  z-index: 1000;
+  text-align: center;
+}
+
+.buttons-container__start,
+.buttons-container__stop {
+  padding: 5px;
+  cursor: pointer;
+}
+
+.buttons-container__start:disabled,
+.buttons-container__stop:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }

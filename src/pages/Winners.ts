@@ -21,7 +21,9 @@ export class Winners {
     goToGarage.className = 'router-buttons__button';
     goToGarage.textContent = 'To Garage';
     goToGarage.addEventListener('click', () => {
-      this.router.navigateTo('garage', { currentPage: this.garagePage });
+      this.router.navigateTo('garage', {
+        currentPage: this.router.getState().currentPage || 1,
+      });
     });
 
     const goToWinnersButton = doc.createElement('button');

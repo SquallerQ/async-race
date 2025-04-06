@@ -10,3 +10,5 @@ export const SVGUseElement = globalThis.SVGUseElement;
 export const console = globalThis.console;
 export const fetch = globalThis.fetch;
 export const setTimeout = globalThis.setTimeout;
+export const SVGSVGElement = globalThis.SVGSVGElement;
+export const DOMMatrixReadOnly = globalThis.DOMMatrixReadOnly;

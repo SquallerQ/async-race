@@ -1,12 +1,15 @@
 import { Router } from '../router';
 import {
   doc,
+  win,
   HTMLElement,
   HTMLHeadingElement,
   HTMLInputElement,
   HTMLButtonElement,
   HTMLSpanElement,
+  SVGSVGElement,
   SVGUseElement,
+  DOMMatrixReadOnly,
   setTimeout,
   console,
   fetch,
@@ -82,10 +85,6 @@ export class Garage {
     colorInput.value = '#3cc8e0';
     colorInput.className = 'forms__create-input';
 
-    const createError = doc.createElement('span');
-    createError.className = 'forms__error';
-    createError.style.display = 'none';
-
     const createButton = doc.createElement('button');
     createButton.textContent = 'Create';
     createButton.className = 'forms__create-button';
@@ -93,7 +92,7 @@ export class Garage {
       this.createCar(nameInput.value, colorInput.value, nameInput),
     );
 
-    createForm.append(nameInput, colorInput, createButton, createError);
+    createForm.append(nameInput, colorInput, createButton);
 
     const updateForm = doc.createElement('div');
     updateForm.className = 'forms__update';
@@ -132,7 +131,21 @@ export class Garage {
     generateButton.className = 'menu-buttons__generate-btn';
     generateButton.addEventListener('click', () => this.addHundredCars());
 
-    menuButtonsContainer.append(generateButton);
+    const startRaceButton = doc.createElement('button');
+    startRaceButton.textContent = 'Start Race';
+    startRaceButton.className = 'menu-buttons__start-btn';
+    startRaceButton.addEventListener('click', () => this.startRace());
+
+    const resetRaceButton = doc.createElement('button');
+    resetRaceButton.textContent = 'Reset Race';
+    resetRaceButton.className = 'menu-buttons__reset-btn';
+    resetRaceButton.addEventListener('click', () => this.resetRace());
+
+    menuButtonsContainer.append(
+      generateButton,
+      startRaceButton,
+      resetRaceButton,
+    );
 
     formsContainer.append(createForm, updateForm);
 
@@ -245,10 +258,17 @@ export class Garage {
     const startButton = doc.createElement('button');
     startButton.className = 'buttons-container__start';
     startButton.textContent = 'A';
+    startButton.addEventListener('click', () =>
+      this.startCar(car.id, carSvg, startButton, stopButton),
+    );
 
     const stopButton = doc.createElement('button');
     stopButton.className = 'buttons-container__stop';
     stopButton.textContent = 'B';
+    stopButton.disabled = true;
+    stopButton.addEventListener('click', () =>
+      this.stopCar(car.id, carSvg, startButton, stopButton),
+    );
 
     buttonsContainerTop.append(selectButton, removeButton, carName);
     buttonsContainerBottom.append(startButton, stopButton);
@@ -293,32 +313,22 @@ export class Garage {
     nameInput: HTMLInputElement,
   ): Promise<void> {
     if (!name.trim()) {
-      const originalPlaceholder = nameInput.placeholder;
       nameInput.placeholder = 'Name cannot be empty';
       nameInput.value = '';
       nameInput.focus();
-      setTimeout(() => {
-        nameInput.placeholder = originalPlaceholder;
-      }, 1000);
+      setTimeout(() => (nameInput.placeholder = 'Enter car name'), 1000);
       return;
     }
 
     try {
       const response = await fetch('http://127.0.0.1:3000/garage', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, color }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to create car');
-      }
+      if (!response.ok) throw new Error('Failed to create car');
 
-      const newCar: Car = await response.json();
-      const track = this.createTrack(newCar);
-      this.tracksContainer.append(track);
       this.totalCars += 1;
       this.updateTitle();
       this.loadCars(this.currentPage);
@@ -387,9 +397,7 @@ export class Garage {
         method: 'DELETE',
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to remove car');
-      }
+      if (!response.ok) throw new Error('Failed to remove car');
       trackContainer.remove();
       this.totalCars -= 1;
       this.updateTitle();
@@ -465,7 +473,6 @@ export class Garage {
       '#FFFF00',
       '#FF00FF',
       '#00FFFF',
-      '#00FFFF',
       '#FFA500',
       '#A52A2A',
       '#800080',
@@ -481,15 +488,11 @@ export class Garage {
         const color = carColors[Math.floor(Math.random() * carColors.length)];
         const response = await fetch('http://127.0.0.1:3000/garage', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name, color }),
         });
 
-        if (!response.ok) {
-          throw new Error('Failed to add car');
-        }
+        if (!response.ok) throw new Error('Failed to add car');
       }
 
       this.totalCars += 100;
@@ -498,5 +501,235 @@ export class Garage {
     } catch (error) {
       console.error(error);
     }
+  }
+
+  private async startCar(
+    carId: number,
+    carSvg: SVGSVGElement,
+    startButton: HTMLButtonElement,
+    stopButton: HTMLButtonElement,
+  ): Promise<void> {
+    try {
+      startButton.disabled = true;
+      stopButton.disabled = false;
+
+      const startRes = await fetch(
+        `http://127.0.0.1:3000/engine?id=${carId}&status=started`,
+        { method: 'PATCH' },
+      );
+      if (!startRes.ok) throw new Error('Failed to start engine');
+      const { velocity, distance } = await startRes.json();
+
+      const duration = distance / velocity;
+      const containerWidth =
+        carSvg.parentElement?.parentElement?.clientWidth || 0;
+      const carWidth = carSvg.clientWidth;
+      const maxTranslate = containerWidth - carWidth - 10;
+
+      carSvg.style.transition = `transform ${duration}ms linear`;
+      carSvg.style.transform = `translateX(${maxTranslate}px)`;
+
+      const driveRes = await fetch(
+        `http://127.0.0.1:3000/engine?id=${carId}&status=drive`,
+        { method: 'PATCH' },
+      );
+
+      if (!driveRes.ok) {
+        const error = await driveRes.text();
+        if (driveRes.status === 500) {
+          const computedStyle = win.getComputedStyle(carSvg);
+          const matrix = new DOMMatrixReadOnly(computedStyle.transform);
+          const currentX = matrix.m41;
+
+          carSvg.style.transition = 'none';
+          carSvg.style.transform = `translateX(${currentX}px)`;
+          console.error(`Engine failure for car ${carId}:`, error);
+          return;
+        } else {
+          throw new Error(error);
+        }
+      }
+
+      setTimeout(() => {
+        startButton.disabled = false;
+        stopButton.disabled = true;
+      }, duration);
+    } catch (error) {
+      console.error(error);
+      startButton.disabled = false;
+      stopButton.disabled = true;
+    }
+  }
+
+  private async stopCar(
+    carId: number,
+    carSvg: SVGSVGElement,
+    startButton: HTMLButtonElement,
+    stopButton: HTMLButtonElement,
+  ): Promise<void> {
+    try {
+      const stopRes = await fetch(
+        `http://127.0.0.1:3000/engine?id=${carId}&status=stopped`,
+        { method: 'PATCH' },
+      );
+      if (!stopRes.ok) throw new Error('Failed to stop engine');
+
+      carSvg.style.transition = 'transform 0.3s ease-out';
+      carSvg.style.transform = 'translateX(0px)';
+
+      startButton.disabled = false;
+      stopButton.disabled = true;
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  private async startRace(): Promise<void> {
+    const carElements =
+      this.tracksContainer.querySelectorAll('.track__container');
+    const racePromises: Promise<{
+      id: number;
+      time: number;
+      success: boolean;
+    }>[] = [];
+
+    carElements.forEach((track) => {
+      const carId = Number(track.getAttribute('data-id'));
+      const carSvg = track.querySelector('svg') as SVGSVGElement;
+      const startButton = track.querySelector(
+        '.buttons-container__start',
+      ) as HTMLButtonElement;
+      const stopButton = track.querySelector(
+        '.buttons-container__stop',
+      ) as HTMLButtonElement;
+
+      if (carId && carSvg) {
+        racePromises.push(
+          this.startSingleCar(carId, carSvg, startButton, stopButton),
+        );
+      }
+    });
+
+    try {
+      const allPromises = Promise.all(racePromises);
+
+      const firstFinished = new Promise<{
+        id: number;
+        time: number;
+        success: boolean;
+      }>((resolve) => {
+        racePromises.forEach((promise) => {
+          promise.then((result) => {
+            if (result.success) resolve(result);
+          });
+        });
+      });
+
+      const winner = await Promise.race([
+        firstFinished,
+        allPromises.then(() => null),
+      ]);
+      if (winner) {
+        const winnerName =
+          this.tracksContainer.querySelector(
+            `.track__container[data-id="${winner.id}"] span`,
+          )?.textContent || `Car #${winner.id}`;
+        this.showWinner(winnerName, winner.time);
+      }
+
+      await allPromises;
+    } catch (error) {
+      console.error('Race error:', error);
+    }
+  }
+
+  private async startSingleCar(
+    carId: number,
+    carSvg: SVGSVGElement,
+    startButton: HTMLButtonElement,
+    stopButton: HTMLButtonElement,
+  ): Promise<{ id: number; time: number; success: boolean }> {
+    try {
+      startButton.disabled = true;
+      stopButton.disabled = false;
+
+      const startRes = await fetch(
+        `http://127.0.0.1:3000/engine?id=${carId}&status=started`,
+        { method: 'PATCH' },
+      );
+      if (!startRes.ok) throw new Error('Failed to start engine');
+      const { velocity, distance } = await startRes.json();
+
+      const duration = distance / velocity;
+      const containerWidth =
+        carSvg.parentElement?.parentElement?.clientWidth || 0;
+      const carWidth = carSvg.clientWidth;
+      const maxTranslate = containerWidth - carWidth - 10;
+
+      carSvg.style.transition = `transform ${duration}ms linear`;
+      carSvg.style.transform = `translateX(${maxTranslate}px)`;
+
+      const driveRes = await fetch(
+        `http://127.0.0.1:3000/engine?id=${carId}&status=drive`,
+        { method: 'PATCH' },
+      );
+
+      if (!driveRes.ok) {
+        if (driveRes.status === 500) {
+          const computedStyle = win.getComputedStyle(carSvg);
+          const matrix = new DOMMatrixReadOnly(computedStyle.transform);
+          const currentX = matrix.m41;
+          carSvg.style.transition = 'none';
+          carSvg.style.transform = `translateX(${currentX}px)`;
+          return { id: carId, time: duration, success: false };
+        }
+        throw new Error(await driveRes.text());
+      }
+
+      setTimeout(() => {
+        startButton.disabled = false;
+        stopButton.disabled = true;
+      }, duration);
+
+      return { id: carId, time: duration, success: true };
+    } catch (error) {
+      console.error(`Car ${carId} error:`, error);
+      return { id: carId, time: Infinity, success: false };
+    }
+  }
+
+  private resetRace(): void {
+    const carElements =
+      this.tracksContainer.querySelectorAll('.track__container');
+    carElements.forEach((track) => {
+      const carSvg = track.querySelector('svg') as SVGSVGElement;
+      const startButton = track.querySelector(
+        '.buttons-container__start',
+      ) as HTMLButtonElement;
+      const stopButton = track.querySelector(
+        '.buttons-container__stop',
+      ) as HTMLButtonElement;
+
+      if (carSvg) {
+        carSvg.style.transition = 'transform 0.3s ease-out';
+        carSvg.style.transform = 'translateX(0px)';
+      }
+
+      if (startButton && stopButton) {
+        startButton.disabled = false;
+        stopButton.disabled = true;
+      }
+    });
+  }
+  private showWinner(winnerName: string, time: number): void {
+    const winnerMessage = doc.createElement('div');
+    winnerMessage.className = 'winner-message';
+    winnerMessage.textContent = `Winner: ${winnerName}, Time: ${(time / 1000).toFixed(2)}s`;
+
+    const page = doc.querySelector('.page') as HTMLElement;
+    page.appendChild(winnerMessage);
+    setTimeout(() => {
+      winnerMessage.remove();
+    }, 5000);
   }
 }
