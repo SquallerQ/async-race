@@ -23,6 +23,9 @@ export class Router {
   public getState(): { [key: string]: any } {
     return hist.state || {};
   }
+  public getPageInstance(path: string): Garage | Winners | undefined {
+    return this.pages[path]?.instance;
+  }
 
   private renderPage(): void {
     const path = win.location.pathname;

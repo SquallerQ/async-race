@@ -9,7 +9,7 @@ html {
   box-sizing: inherit;
 }
 
-*{
+* {
   margin: 0;
   padding: 0;
 }
@@ -54,9 +54,11 @@ button {
 }
 
 .page {
+  padding: 10px 0;
   background-color: #ffffff;
   width: 90%;
 }
+
 .router-buttons__container {
   display: flex;
   padding: 5px;
@@ -71,6 +73,7 @@ button {
   border-radius: 3px;
   cursor: pointer;
 }
+
 .router-buttons__button:disabled {
   cursor: auto;
   opacity: 0.5;
@@ -80,30 +83,38 @@ button {
   padding: 5px;
 }
 
-.forms__create, .forms__update {
+.forms__create,
+.forms__update {
   padding: 5px 0;
   display: flex;
   align-items: center;
   gap: 5px
 }
-.forms__create-input, .forms__update-input {
+
+.forms__create-input,
+.forms__update-input {
   height: 32px;
   padding: 0 5px;
   background-color: #fff;
   border: 1px solid #ccc;
 }
-.forms__update-input:disabled{
+
+.forms__update-input:disabled {
   background-color: #ccc;
 }
-.forms__create-input:focus, .forms__update-input:focus {
+
+.forms__create-input:focus,
+.forms__update-input:focus {
   border: 1px solid #3ea519;
   outline: none;
 }
-.forms__create-button, .forms__update-button {
+
+.forms__create-button,
+.forms__update-button {
   padding: 5px 10px;
 
   min-width: 80px;
-  
+
   background-color: #c0ffaa;
   border: 1px solid #000;
   border-radius: 3px;
@@ -118,6 +129,7 @@ button {
   flex-wrap: wrap;
   padding: 5px;
 }
+
 .menu-buttons__generate-btn {
   padding: 5px 10px;
   width: 250px;
@@ -126,7 +138,9 @@ button {
   border-radius: 3px;
   cursor: pointer;
 }
-.menu-buttons__start-btn, .menu-buttons__reset-btn {
+
+.menu-buttons__start-btn,
+.menu-buttons__reset-btn {
   width: 120px;
   padding: 5px 10px;
   background-color: #c0ffaa;
@@ -134,6 +148,7 @@ button {
   border-radius: 3px;
   cursor: pointer;
 }
+
 .actual__page {
   margin-left: 10px;
   padding: 5px 10px;
@@ -141,29 +156,36 @@ button {
   background-color: #000;
   color: #fff;
 }
+
 .track__container {
   display: flex;
   flex-direction: column;
   padding: 10px;
 }
+
 .track__buttons-container {
   display: flex;
   flex-direction: column;
-  gap: 7px; 
-}
-.track__buttons-container--top, .track__buttons-container--bottom {
-  display: flex;
-  align-items: center;
-  
   gap: 7px;
 }
+
+.track__buttons-container--top,
+.track__buttons-container--bottom {
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+}
+
 .track__buttons-container--top span {
   font-size: 18px;
   color: #246360;
 }
-.buttons-container__select, .buttons-container__remove {
+
+.buttons-container__select,
+.buttons-container__remove {
   padding: 5px 10px;
-  
+
   background-color: #ffffb4;
   border: 1px solid #000;
   border-radius: 3px;
@@ -171,7 +193,8 @@ button {
   cursor: pointer;
 }
 
-.buttons-container__start, .buttons-container__stop {
+.buttons-container__start,
+.buttons-container__stop {
   padding: 3px 6px;
 
   color: #fff;
@@ -183,17 +206,20 @@ button {
 .track__animation-container {
   padding: 5px 0px;
 }
+
 .car_flag-container {
   display: flex;
   justify-content: space-between;
   align-items: end;
 
-  margin-top: -30px;
+  /* margin-top: -30px; */
 }
+
 .car_flag-container svg:last-child {
   margin-bottom: 6px;
   margin-right: 70px;
 }
+
 .track__road {
   margin-top: -7px;
   height: 5px;
@@ -252,4 +278,41 @@ svg {
 .buttons-container__stop:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.winners-page {
+  background-color: #f1f1f1;
+}
+.winners-table {
+  width: 50%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  background-color: #fff;
+}
+
+.winners-table th,
+.winners-table td {
+  text-align: center;
+  border: 1px solid #ddd;
+}
+
+.winners-table th {
+  padding: 5px;
+  
+  background-color: #d8efd0;
+}
+
+.winners-table td svg {
+  vertical-align: middle;
+}
+
+.winners-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+  background-color: #c0ffaa;
+}
+
+.winners-table th.sortable:hover {
+  color: #fff;
+  background-color: #44bd19;
 }
