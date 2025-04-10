@@ -4,21 +4,9 @@ import {
   HTMLElement,
   HTMLSpanElement,
   HTMLButtonElement,
-  fetch,
   console,
 } from '../browserTypes';
-
-export interface Winner {
-  id: number;
-  wins: number;
-  time: number;
-}
-
-interface Car {
-  name: string;
-  color: string;
-  id: number;
-}
+import { fetchWinners, fetchCar } from '../utils/api';
 
 export class Winners {
   private router: Router;
@@ -126,48 +114,28 @@ export class Winners {
     return container;
   }
 
-  private async fetchWinners(
-    page: number = 1,
-    limit: number = 10,
-  ): Promise<Winner[]> {
-    const response = await fetch(
-      `http://127.0.0.1:3000/winners?_page=${page}&_limit=${limit}&_sort=${this.sortColumn}&_order=${this.sortOrder}`,
-      { method: 'GET' },
-    );
-    if (!response.ok) throw new Error('Failed to fetch winners');
-
-    const totalCount = response.headers.get('X-Total-Count');
-    this.totalWinners = totalCount ? parseInt(totalCount, 10) : 0;
-    this.title.textContent = `Winners (${this.totalWinners})`;
-    return await response.json();
-  }
-
-  private async fetchCar(carId: number): Promise<Car | null> {
-    try {
-      const response = await fetch(`http://127.0.0.1:3000/garage/${carId}`, {
-        method: 'GET',
-      });
-      if (!response.ok) return null;
-      return await response.json();
-    } catch (error) {
-      console.error(`Failed to fetch car ${carId}:`, error);
-      return null;
-    }
-  }
-
   private async loadWinners(page: number): Promise<void> {
-    const totalPages = Math.ceil(this.totalWinners / 10);
-    if (page < 1 || (this.totalWinners > 0 && page > totalPages)) return;
-    this.currentPage = page;
-
     try {
-      const winners = await this.fetchWinners(this.currentPage);
+      const { winners, total } = await fetchWinners(
+        page,
+        10,
+        this.sortColumn,
+        this.sortOrder,
+      );
+      this.totalWinners = total;
+      const totalPages = Math.ceil(this.totalWinners / 10);
+      if (page < 1 || (this.totalWinners > 0 && page > totalPages)) return;
+      this.currentPage = page;
+
+      this.title.textContent = `Winners (${this.totalWinners})`;
+      this.pageIndicator.textContent = `Page ${this.currentPage}`;
+
       const tbody = doc.createElement('tbody');
       tbody.innerHTML = '';
 
       for (let i = 0; i < winners.length; i++) {
         const winner = winners[i];
-        const car = await this.fetchCar(winner.id);
+        const car = await fetchCar(winner.id);
         if (!car) continue;
 
         const row = doc.createElement('tr');
@@ -185,6 +153,8 @@ export class Winners {
         );
         useElement.setAttribute('href', '../../sprite.svg#car');
         useElement.setAttribute('fill', car.color);
+        useElement.setAttribute('stroke', '#000000');
+        useElement.setAttribute('stroke-width', '2');
         carSvg.append(useElement);
         carCell.append(carSvg);
 
@@ -206,9 +176,7 @@ export class Winners {
       this.winnersTable.append(tbody);
 
       this.pageIndicator.textContent = `Page ${this.currentPage}`;
-      this.prevButton.disabled = this.currentPage === 1;
-      this.nextButton.disabled =
-        this.currentPage === totalPages || winners.length < 10;
+      this.updatePaginationButtons(totalPages, winners.length);
     } catch (error) {
       console.error(error);
     }
@@ -222,6 +190,14 @@ export class Winners {
       this.sortOrder = 'DESC';
     }
     this.loadWinners(this.currentPage);
+  }
+  private updatePaginationButtons(
+    totalPages: number,
+    currentPageItems: number,
+  ): void {
+    this.prevButton.disabled = this.currentPage === 1;
+    this.nextButton.disabled =
+      this.currentPage === totalPages || currentPageItems < 10;
   }
 
   public async updateWinners(): Promise<void> {

@@ -12,16 +12,21 @@ import {
   DOMMatrixReadOnly,
   setTimeout,
   console,
-  fetch,
 } from '../browserTypes';
 
-import { Winners, Winner } from './Winners';
-
-interface Car {
-  name: string;
-  color: string;
-  id: number;
-}
+import { Winners } from './Winners';
+import { Car } from '../types';
+import {
+  fetchCars,
+  createCar,
+  deleteCar,
+  deleteWinner,
+  startEngine,
+  stopEngine,
+  driveCar,
+  saveWinner,
+  updateCar,
+} from '../utils/api';
 
 export class Garage {
   private router: Router;
@@ -91,7 +96,7 @@ export class Garage {
     createButton.textContent = 'Create';
     createButton.className = 'forms__create-button';
     createButton.addEventListener('click', () =>
-      this.createCar(nameInput.value, colorInput.value, nameInput),
+      this.createCar(nameInput.value, colorInput.value),
     );
 
     createForm.append(nameInput, colorInput, createButton);
@@ -189,35 +194,17 @@ export class Garage {
     return container;
   }
 
-  public async fetchCars(page: number = 1, limit: number = 7): Promise<Car[]> {
-    const response = await fetch(
-      `http://127.0.0.1:3000/garage?_page=${page}&_limit=${limit}`,
-      { method: 'GET' },
-    );
-    if (!response.ok) {
-      throw new Error('Failed to fetch cars');
-    }
-
-    const totalCount = response.headers.get('X-Total-Count');
-    this.totalCars = totalCount ? parseInt(totalCount, 10) : 0;
-    this.updateTitle();
-    return await response.json();
-  }
-
   private async loadCars(page: number): Promise<void> {
-    const totalPages = Math.ceil(this.totalCars / 7);
-    if (page < 1 || (this.totalCars > 0 && page > totalPages)) return;
-    this.currentPage = page;
-
     try {
-      const cars = await this.fetchCars(this.currentPage, 7);
-      this.tracksContainer.replaceChildren();
-      cars.forEach((car) => {
-        const track = this.createTrack(car);
-        this.tracksContainer.append(track);
-      });
-
+      const { cars, total } = await fetchCars(page);
+      this.totalCars = total;
+      this.currentPage = page;
+      this.title.textContent = `Garage (${this.totalCars})`;
       this.pageIndicator.textContent = `Page ${this.currentPage}`;
+      this.tracksContainer.innerHTML = '';
+      cars.forEach((car) => this.tracksContainer.append(this.createTrack(car)));
+
+      const totalPages = Math.ceil(this.totalCars / 7);
       this.prevButton.disabled = this.currentPage === 1;
       this.nextButton.disabled =
         this.currentPage === totalPages || cars.length < 7;
@@ -289,6 +276,8 @@ export class Garage {
     const useElement = doc.createElementNS('http://www.w3.org/2000/svg', 'use');
     useElement.setAttribute('href', '../../sprite.svg#car');
     useElement.setAttribute('fill', car.color);
+    useElement.setAttribute('stroke', '#000000');
+    useElement.setAttribute('stroke-width', '2');
     carSvg.append(useElement);
 
     const flagSvg = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -309,32 +298,10 @@ export class Garage {
     return trackContainer;
   }
 
-  private async createCar(
-    name: string,
-    color: string,
-    nameInput: HTMLInputElement,
-  ): Promise<void> {
-    if (!name.trim()) {
-      nameInput.placeholder = 'Name cannot be empty';
-      nameInput.value = '';
-      nameInput.focus();
-      setTimeout(() => (nameInput.placeholder = 'Enter car name'), 1000);
-      return;
-    }
-
+  private async createCar(name: string, color: string): Promise<void> {
     try {
-      const response = await fetch('http://127.0.0.1:3000/garage', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, color }),
-      });
-
-      if (!response.ok) throw new Error('Failed to create car');
-
-      this.totalCars += 1;
-      this.updateTitle();
-      this.loadCars(this.currentPage);
-      nameInput.value = '';
+      await createCar(name, color);
+      await this.loadCars(this.currentPage);
     } catch (error) {
       console.error(error);
     }
@@ -362,21 +329,10 @@ export class Garage {
     }
 
     try {
-      const response = await fetch(`http://127.0.0.1:3000/garage/${carId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name, color }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update car');
-      }
-
-      const updatedCar: Car = await response.json();
-      const track = this.tracksContainer.querySelector(`
-        .track__container[data-id="${carId}"]`);
+      const updatedCar = await updateCar(carId, name, color);
+      const track = this.tracksContainer.querySelector(
+        `.track__container[data-id="${carId}"]`,
+      );
       if (track) {
         const carName = track.querySelector('span');
         const carSvgUse = track.querySelector('svg use');
@@ -395,27 +351,14 @@ export class Garage {
     trackContainer: HTMLElement,
   ): Promise<void> {
     try {
-      const garageResponse = await fetch(
-        `http://127.0.0.1:3000/garage/${carId}`,
-        { method: 'DELETE' },
-      );
-      if (!garageResponse.ok)
-        throw new Error('Failed to remove car from garage');
-
-      const winnersResponse = await fetch(
-        `http://127.0.0.1:3000/winners/${carId}`,
-        { method: 'DELETE' },
-      );
-      if (!winnersResponse.ok && winnersResponse.status !== 404) {
-        throw new Error('Failed to remove car from winners');
-      }
-
+      await deleteCar(carId);
+      await deleteWinner(carId);
       trackContainer.remove();
       this.totalCars -= 1;
       this.updateTitle();
       await this.loadCars(this.currentPage);
 
-      const winnersInstance = this.router.getPageInstance('/winners');
+      const winnersInstance = this.router.getPageInstance('winners');
       if (winnersInstance instanceof Winners) {
         await winnersInstance.updateWinners();
       }
@@ -503,18 +446,10 @@ export class Garage {
           carModels[Math.floor(Math.random() * carModels.length)];
         const name = `${randomBrand} ${randomModel}`;
         const color = carColors[Math.floor(Math.random() * carColors.length)];
-        const response = await fetch('http://127.0.0.1:3000/garage', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, color }),
-        });
-
-        if (!response.ok) throw new Error('Failed to add car');
+        await createCar(name, color);
       }
 
-      this.totalCars += 100;
-      this.updateTitle();
-      this.loadCars(this.currentPage);
+      await this.loadCars(this.currentPage);
     } catch (error) {
       console.error(error);
     }
@@ -530,12 +465,7 @@ export class Garage {
       startButton.disabled = true;
       stopButton.disabled = false;
 
-      const startRes = await fetch(
-        `http://127.0.0.1:3000/engine?id=${carId}&status=started`,
-        { method: 'PATCH' },
-      );
-      if (!startRes.ok) throw new Error('Failed to start engine');
-      const { velocity, distance } = await startRes.json();
+      const { velocity, distance } = await startEngine(carId);
 
       const duration = distance / velocity;
       const containerWidth =
@@ -546,25 +476,16 @@ export class Garage {
       carSvg.style.transition = `transform ${duration}ms linear`;
       carSvg.style.transform = `translateX(${maxTranslate}px)`;
 
-      const driveRes = await fetch(
-        `http://127.0.0.1:3000/engine?id=${carId}&status=drive`,
-        { method: 'PATCH' },
-      );
+      const { success } = await driveCar(carId);
 
-      if (!driveRes.ok) {
-        const error = await driveRes.text();
-        if (driveRes.status === 500) {
-          const computedStyle = win.getComputedStyle(carSvg);
-          const matrix = new DOMMatrixReadOnly(computedStyle.transform);
-          const currentX = matrix.m41;
-
-          carSvg.style.transition = 'none';
-          carSvg.style.transform = `translateX(${currentX}px)`;
-          console.error(`Engine failure for car ${carId}:`, error);
-          return;
-        } else {
-          throw new Error(error);
-        }
+      if (!success) {
+        const computedStyle = win.getComputedStyle(carSvg);
+        const matrix = new DOMMatrixReadOnly(computedStyle.transform);
+        const currentX = matrix.m41;
+        carSvg.style.transition = 'none';
+        carSvg.style.transform = `translateX(${currentX}px)`;
+        console.error(`Engine failure for car ${carId}`);
+        return;
       }
 
       setTimeout(() => {
@@ -585,11 +506,7 @@ export class Garage {
     stopButton: HTMLButtonElement,
   ): Promise<void> {
     try {
-      const stopRes = await fetch(
-        `http://127.0.0.1:3000/engine?id=${carId}&status=stopped`,
-        { method: 'PATCH' },
-      );
-      if (!stopRes.ok) throw new Error('Failed to stop engine');
+      await stopEngine(carId);
 
       carSvg.style.transition = 'transform 0.3s ease-out';
       carSvg.style.transform = 'translateX(0px)';
@@ -653,7 +570,7 @@ export class Garage {
           )?.textContent || `Car #${winner.id}`;
         this.showWinner(winnerName, winner.time);
 
-        await this.saveWinner(winner.id, winner.time);
+        await saveWinner(winner.id, winner.time);
         const winnersInstance = this.router.getPageInstance('/winners');
         if (winnersInstance instanceof Winners) {
           await winnersInstance.updateWinners();
@@ -663,31 +580,6 @@ export class Garage {
       await Promise.all(racePromises);
     } catch (error) {
       console.error('Race error:', error);
-    }
-  }
-  private async saveWinner(carId: number, time: number): Promise<void> {
-    try {
-      const response = await fetch(`http://127.0.0.1:3000/winners/${carId}`, {
-        method: 'GET',
-      });
-      if (response.ok) {
-        const winner: Winner = await response.json();
-        const newWins = winner.wins + 1;
-        const newTime = time < winner.time ? time : winner.time;
-        await fetch(`http://127.0.0.1:3000/winners/${carId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ wins: newWins, time: newTime }),
-        });
-      } else if (response.status === 404) {
-        await fetch('http://127.0.0.1:3000/winners', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: carId, wins: 1, time }),
-        });
-      }
-    } catch (error) {
-      console.error('Error saving winner:', error);
     }
   }
 
@@ -701,12 +593,7 @@ export class Garage {
       startButton.disabled = true;
       stopButton.disabled = false;
 
-      const startRes = await fetch(
-        `http://127.0.0.1:3000/engine?id=${carId}&status=started`,
-        { method: 'PATCH' },
-      );
-      if (!startRes.ok) throw new Error('Failed to start engine');
-      const { velocity, distance } = await startRes.json();
+      const { velocity, distance } = await startEngine(carId);
 
       const duration = distance / velocity;
       const containerWidth =
@@ -717,21 +604,15 @@ export class Garage {
       carSvg.style.transition = `transform ${duration}ms linear`;
       carSvg.style.transform = `translateX(${maxTranslate}px)`;
 
-      const driveRes = await fetch(
-        `http://127.0.0.1:3000/engine?id=${carId}&status=drive`,
-        { method: 'PATCH' },
-      );
+      const { success } = await driveCar(carId);
 
-      if (!driveRes.ok) {
-        if (driveRes.status === 500) {
-          const computedStyle = win.getComputedStyle(carSvg);
-          const matrix = new DOMMatrixReadOnly(computedStyle.transform);
-          const currentX = matrix.m41;
-          carSvg.style.transition = 'none';
-          carSvg.style.transform = `translateX(${currentX}px)`;
-          return { id: carId, time: duration, success: false };
-        }
-        throw new Error(await driveRes.text());
+      if (!success) {
+        const computedStyle = win.getComputedStyle(carSvg);
+        const matrix = new DOMMatrixReadOnly(computedStyle.transform);
+        const currentX = matrix.m41;
+        carSvg.style.transition = 'none';
+        carSvg.style.transform = `translateX(${currentX}px)`;
+        return { id: carId, time: duration, success: false };
       }
 
       setTimeout(() => {
