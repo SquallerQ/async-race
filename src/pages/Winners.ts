@@ -7,6 +7,7 @@ import {
   console,
 } from '../browserTypes';
 import { fetchWinners, fetchCar } from '../utils/api';
+import { WINNERS_TABLE_HEADERS, WINNERS_PER_PAGE } from '../utils/constants';
 
 export class Winners {
   private router: Router;
@@ -78,19 +79,12 @@ export class Winners {
     const thead = doc.createElement('thead');
     const headerRow = doc.createElement('tr');
 
-    const headers = [
-      { text: 'Number', sortable: false },
-      { text: 'Car', sortable: false },
-      { text: 'Name', sortable: false },
-      { text: 'Wins', sortable: true, key: 'wins' },
-      { text: 'Best time (seconds)', sortable: true, key: 'time' },
-    ];
-
-    headers.forEach((header) => {
+    WINNERS_TABLE_HEADERS.forEach((header) => {
       const th = doc.createElement('th');
       th.textContent = header.text;
-      if (header.sortable) {
-        th.className = 'sortable';
+      if (header.sortable && header.key) {
+        th.classList.add('sortable');
+        th.setAttribute('data-sort', header.key);
         th.addEventListener('click', () =>
           this.sortTable(header.key as 'wins' | 'time'),
         );
@@ -118,12 +112,12 @@ export class Winners {
     try {
       const { winners, total } = await fetchWinners(
         page,
-        10,
+        WINNERS_PER_PAGE,
         this.sortColumn,
         this.sortOrder,
       );
       this.totalWinners = total;
-      const totalPages = Math.ceil(this.totalWinners / 10);
+      const totalPages = Math.ceil(this.totalWinners / WINNERS_PER_PAGE);
       if (page < 1 || (this.totalWinners > 0 && page > totalPages)) return;
       this.currentPage = page;
 
@@ -141,7 +135,7 @@ export class Winners {
         const row = doc.createElement('tr');
 
         const numberCell = doc.createElement('td');
-        numberCell.textContent = `${(this.currentPage - 1) * 10 + i + 1}`;
+        numberCell.textContent = `${(this.currentPage - 1) * WINNERS_PER_PAGE + i + 1}`;
 
         const carCell = doc.createElement('td');
         const carSvg = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -197,7 +191,7 @@ export class Winners {
   ): void {
     this.prevButton.disabled = this.currentPage === 1;
     this.nextButton.disabled =
-      this.currentPage === totalPages || currentPageItems < 10;
+      this.currentPage === totalPages || currentPageItems < WINNERS_PER_PAGE;
   }
 
   public async updateWinners(): Promise<void> {

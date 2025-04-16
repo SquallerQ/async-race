@@ -28,6 +28,8 @@ import {
   updateCar,
 } from '../utils/api';
 
+import { CAR_ANIMATION_OFFSET } from '../utils/constants';
+
 export class Garage {
   private router: Router;
   private totalCars: number = 0;
@@ -471,7 +473,7 @@ export class Garage {
       const containerWidth =
         carSvg.parentElement?.parentElement?.clientWidth || 0;
       const carWidth = carSvg.clientWidth;
-      const maxTranslate = containerWidth - carWidth - 10;
+      const maxTranslate = containerWidth - carWidth - CAR_ANIMATION_OFFSET;
 
       carSvg.style.transition = `transform ${duration}ms linear`;
       carSvg.style.transform = `translateX(${maxTranslate}px)`;
@@ -599,7 +601,7 @@ export class Garage {
       const containerWidth =
         carSvg.parentElement?.parentElement?.clientWidth || 0;
       const carWidth = carSvg.clientWidth;
-      const maxTranslate = containerWidth - carWidth - 10;
+      const maxTranslate = containerWidth - carWidth - CAR_ANIMATION_OFFSET;
 
       carSvg.style.transition = `transform ${duration}ms linear`;
       carSvg.style.transform = `translateX(${maxTranslate}px)`;

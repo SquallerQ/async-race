@@ -84,15 +84,20 @@ export const fetchWinners = async (
   sort: 'wins' | 'time' = 'wins',
   order: 'ASC' | 'DESC' = 'DESC',
 ): Promise<{ winners: Winner[]; total: number }> => {
-  const response = await fetch(
-    `http://127.0.0.1:3000/winners?_page=${page}&_limit=${limit}&_sort=${sort}&_order=${order}`,
-    { method: 'GET' },
-  );
-  if (!response.ok) throw new Error('Failed to fetch winners');
-  const totalCount = response.headers.get('X-Total-Count');
-  const total = totalCount ? parseInt(totalCount, 10) : 0;
-  const winners = await response.json();
-  return { winners, total };
+  try {
+    const response = await fetch(
+      `http://127.0.0.1:3000/winners?_page=${page}&_limit=${limit}&_sort=${sort}&_order=${order}`,
+      { method: 'GET' },
+    );
+    if (!response.ok) throw new Error('Failed to fetch winners');
+    const totalCount = response.headers.get('X-Total-Count');
+    const total = totalCount ? parseInt(totalCount, 10) : 0;
+    const winners = await response.json();
+    return { winners, total };
+  } catch (error) {
+    console.error('Error fetching winners:', error);
+    return { winners: [], total: 0 };
+  }
 };
 
 export const saveWinner = async (
