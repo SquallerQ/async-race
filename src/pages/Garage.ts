@@ -29,6 +29,11 @@ import {
 } from '../utils/api';
 
 import { CAR_ANIMATION_OFFSET } from '../utils/constants';
+import { generateHundredCars } from '../utils/carGenerator';
+import {
+  disableButtonsDuringRace,
+  enableButtonsAfterRace,
+} from '../utils/buttonManager';
 
 export class Garage {
   private router: Router;
@@ -399,62 +404,7 @@ export class Garage {
   }
 
   private async addHundredCars(): Promise<void> {
-    const carNames = [
-      'Tesla',
-      'BMW',
-      'Audi',
-      'Porsche',
-      'Ferrari',
-      'Lamborghini',
-      'Mercedes',
-      'Ford',
-      'Chevrolet',
-      'Toyota',
-      'Honda',
-      'Nissan',
-      'Subaru',
-    ];
-    const carModels = [
-      'Model S',
-      'M5',
-      'A4',
-      'C-Class',
-      'B4',
-      'CC-2',
-      'MC-6',
-      '488',
-      '911',
-      'MX-5',
-      'WRX',
-      'MCA',
-    ];
-    const carColors = [
-      '#FF0000',
-      '#00FF00',
-      '#0000FF',
-      '#FFFF00',
-      '#FF00FF',
-      '#00FFFF',
-      '#FFA500',
-      '#A52A2A',
-      '#800080',
-    ];
-
-    try {
-      for (let i = 0; i < 100; i++) {
-        const randomBrand =
-          carNames[Math.floor(Math.random() * carNames.length)];
-        const randomModel =
-          carModels[Math.floor(Math.random() * carModels.length)];
-        const name = `${randomBrand} ${randomModel}`;
-        const color = carColors[Math.floor(Math.random() * carColors.length)];
-        await createCar(name, color);
-      }
-
-      await this.loadCars(this.currentPage);
-    } catch (error) {
-      console.error(error);
-    }
+    await generateHundredCars(() => this.loadCars(this.currentPage));
   }
 
   private async startCar(
@@ -665,92 +615,20 @@ export class Garage {
     }, 5000);
   }
   private disableButtonsDuringRace(): void {
-    const removeButtons = this.tracksContainer.querySelectorAll(
-      '.buttons-container__remove',
+    disableButtonsDuringRace(
+      this.tracksContainer,
+      this.prevButton,
+      this.nextButton,
     );
-    removeButtons.forEach((button) => {
-      (button as HTMLButtonElement).disabled = true;
-    });
-
-    const selectButtons = this.tracksContainer.querySelectorAll(
-      '.buttons-container__select',
-    );
-    selectButtons.forEach((button) => {
-      (button as HTMLButtonElement).disabled = true;
-    });
-
-    const startButtons = this.tracksContainer.querySelectorAll(
-      '.buttons-container__start',
-    );
-    startButtons.forEach((button) => {
-      (button as HTMLButtonElement).disabled = true;
-    });
-
-    this.prevButton.disabled = true;
-    this.nextButton.disabled = true;
-
-    const createButton = doc.querySelector(
-      '.forms__create-button',
-    ) as HTMLButtonElement;
-    const generateButton = doc.querySelector(
-      '.menu-buttons__generate-btn',
-    ) as HTMLButtonElement;
-    const startRaceButton = doc.querySelector(
-      '.menu-buttons__start-btn',
-    ) as HTMLButtonElement;
-
-    if (createButton) createButton.disabled = true;
-    if (generateButton) generateButton.disabled = true;
-    if (startRaceButton) startRaceButton.disabled = true;
-
-    const toWinnersButton = doc.querySelector(
-      '.router-buttons__button:not([disabled])',
-    );
-    if (toWinnersButton) {
-      (toWinnersButton as HTMLButtonElement).disabled = true;
-      setTimeout(() => {
-        (toWinnersButton as HTMLButtonElement).disabled = false;
-      }, 500);
-    }
   }
+
   private enableButtonsAfterRace(): void {
-    const removeButtons = this.tracksContainer.querySelectorAll(
-      '.buttons-container__remove',
+    enableButtonsAfterRace(
+      this.tracksContainer,
+      this.prevButton,
+      this.nextButton,
+      this.totalCars,
+      this.currentPage,
     );
-    removeButtons.forEach((button) => {
-      (button as HTMLButtonElement).disabled = false;
-    });
-
-    const selectButtons = this.tracksContainer.querySelectorAll(
-      '.buttons-container__select',
-    );
-    selectButtons.forEach((button) => {
-      (button as HTMLButtonElement).disabled = false;
-    });
-
-    const startButtons = this.tracksContainer.querySelectorAll(
-      '.buttons-container__start',
-    );
-    startButtons.forEach((button) => {
-      (button as HTMLButtonElement).disabled = false;
-    });
-
-    const totalPages = Math.ceil(this.totalCars / 7);
-    this.prevButton.disabled = this.currentPage === 1;
-    this.nextButton.disabled = this.currentPage === totalPages;
-
-    const createButton = doc.querySelector(
-      '.forms__create-button',
-    ) as HTMLButtonElement;
-    const generateButton = doc.querySelector(
-      '.menu-buttons__generate-btn',
-    ) as HTMLButtonElement;
-    const startRaceButton = doc.querySelector(
-      '.menu-buttons__start-btn',
-    ) as HTMLButtonElement;
-
-    if (createButton) createButton.disabled = false;
-    if (generateButton) generateButton.disabled = false;
-    if (startRaceButton) startRaceButton.disabled = false;
   }
 }
