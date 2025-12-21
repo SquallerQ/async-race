@@ -1,19 +1,4 @@
 import { Router } from '../router';
-import {
-  doc,
-  win,
-  HTMLElement,
-  HTMLHeadingElement,
-  HTMLInputElement,
-  HTMLButtonElement,
-  HTMLSpanElement,
-  SVGSVGElement,
-  SVGUseElement,
-  DOMMatrixReadOnly,
-  setTimeout,
-  console,
-} from '../browserTypes';
-
 import { Winners } from './Winners';
 import { Car } from '../types';
 import {
@@ -30,10 +15,7 @@ import {
 
 import { CAR_ANIMATION_OFFSET } from '../utils/constants';
 import { generateHundredCars } from '../utils/carGenerator';
-import {
-  disableButtonsDuringRace,
-  enableButtonsAfterRace,
-} from '../utils/buttonManager';
+import { disableButtonsDuringRace, enableButtonsAfterRace } from '../utils/buttonManager';
 
 export class Garage {
   private router: Router;
@@ -51,30 +33,30 @@ export class Garage {
 
   constructor(router: Router) {
     this.router = router;
-    this.title = doc.createElement('h1');
-    this.tracksContainer = doc.createElement('div');
-    this.updateNameInput = doc.createElement('input');
-    this.updateColorInput = doc.createElement('input');
-    this.updateButton = doc.createElement('button');
-    this.pageIndicator = doc.createElement('span');
-    this.prevButton = doc.createElement('button');
-    this.nextButton = doc.createElement('button');
+    this.title = document.createElement('h1');
+    this.tracksContainer = document.createElement('div');
+    this.updateNameInput = document.createElement('input');
+    this.updateColorInput = document.createElement('input');
+    this.updateButton = document.createElement('button');
+    this.pageIndicator = document.createElement('span');
+    this.prevButton = document.createElement('button');
+    this.nextButton = document.createElement('button');
     this.currentPage = router.getState().currentPage || 1;
   }
 
   public render(): Node {
-    const container = doc.createElement('div');
+    const container = document.createElement('div');
     container.className = 'page';
 
-    const routerButtonsContainer = doc.createElement('div');
+    const routerButtonsContainer = document.createElement('div');
     routerButtonsContainer.className = 'router-buttons__container';
 
-    const goToGarage = doc.createElement('button');
+    const goToGarage = document.createElement('button');
     goToGarage.className = 'router-buttons__button';
     goToGarage.textContent = 'To Garage';
     goToGarage.disabled = true;
 
-    const goToWinnersButton = doc.createElement('button');
+    const goToWinnersButton = document.createElement('button');
     goToWinnersButton.className = 'router-buttons__button';
     goToWinnersButton.textContent = 'To Winners';
     goToWinnersButton.addEventListener('click', () => {
@@ -83,32 +65,30 @@ export class Garage {
 
     routerButtonsContainer.append(goToGarage, goToWinnersButton);
 
-    const formsContainer = doc.createElement('div');
+    const formsContainer = document.createElement('div');
     formsContainer.className = 'forms__container';
 
-    const createForm = doc.createElement('div');
+    const createForm = document.createElement('div');
     createForm.className = 'forms__create';
 
-    const nameInput = doc.createElement('input');
+    const nameInput = document.createElement('input');
     nameInput.type = 'text';
     nameInput.className = 'forms__create-input';
     nameInput.placeholder = 'Enter car name';
 
-    const colorInput = doc.createElement('input');
+    const colorInput = document.createElement('input');
     colorInput.type = 'color';
     colorInput.value = '#3cc8e0';
     colorInput.className = 'forms__create-input';
 
-    const createButton = doc.createElement('button');
+    const createButton = document.createElement('button');
     createButton.textContent = 'Create';
     createButton.className = 'forms__create-button';
-    createButton.addEventListener('click', () =>
-      this.createCar(nameInput.value, colorInput.value),
-    );
+    createButton.addEventListener('click', () => this.createCar(nameInput.value, colorInput.value));
 
     createForm.append(nameInput, colorInput, createButton);
 
-    const updateForm = doc.createElement('div');
+    const updateForm = document.createElement('div');
     updateForm.className = 'forms__update';
 
     this.updateNameInput.type = 'text';
@@ -124,42 +104,29 @@ export class Garage {
     this.updateButton.className = 'forms__update-button';
     this.updateButton.disabled = true;
     this.updateButton.addEventListener('click', () =>
-      this.updateCar(
-        this.selectedCarId,
-        this.updateNameInput.value,
-        this.updateColorInput.value,
-        this.updateNameInput,
-      ),
+      this.updateCar(this.selectedCarId, this.updateNameInput.value, this.updateColorInput.value, this.updateNameInput),
     );
-    updateForm.append(
-      this.updateNameInput,
-      this.updateColorInput,
-      this.updateButton,
-    );
+    updateForm.append(this.updateNameInput, this.updateColorInput, this.updateButton);
 
-    const menuButtonsContainer = doc.createElement('div');
+    const menuButtonsContainer = document.createElement('div');
     menuButtonsContainer.className = 'menu-buttons__container';
 
-    const generateButton = doc.createElement('button');
+    const generateButton = document.createElement('button');
     generateButton.textContent = 'Generate 100 Cars';
     generateButton.className = 'menu-buttons__generate-btn';
     generateButton.addEventListener('click', () => this.addHundredCars());
 
-    const startRaceButton = doc.createElement('button');
+    const startRaceButton = document.createElement('button');
     startRaceButton.textContent = 'Start Race';
     startRaceButton.className = 'menu-buttons__start-btn';
     startRaceButton.addEventListener('click', () => this.startRace());
 
-    const resetRaceButton = doc.createElement('button');
+    const resetRaceButton = document.createElement('button');
     resetRaceButton.textContent = 'Reset Race';
     resetRaceButton.className = 'menu-buttons__reset-btn';
     resetRaceButton.addEventListener('click', () => this.resetRace());
 
-    menuButtonsContainer.append(
-      generateButton,
-      startRaceButton,
-      resetRaceButton,
-    );
+    menuButtonsContainer.append(generateButton, startRaceButton, resetRaceButton);
 
     formsContainer.append(createForm, updateForm);
 
@@ -169,20 +136,16 @@ export class Garage {
 
     this.tracksContainer.className = 'tracks__container';
 
-    const paginationContainer = doc.createElement('div');
+    const paginationContainer = document.createElement('div');
     paginationContainer.className = 'pagination';
 
     this.prevButton.textContent = 'Previous';
     this.prevButton.className = 'pagination__button';
-    this.prevButton.addEventListener('click', () =>
-      this.loadCars(this.currentPage - 1),
-    );
+    this.prevButton.addEventListener('click', () => this.loadCars(this.currentPage - 1));
 
     this.nextButton.textContent = 'Next';
     this.nextButton.className = 'pagination__button';
-    this.nextButton.addEventListener('click', () =>
-      this.loadCars(this.currentPage + 1),
-    );
+    this.nextButton.addEventListener('click', () => this.loadCars(this.currentPage + 1));
 
     paginationContainer.append(this.prevButton, this.nextButton);
 
@@ -213,88 +176,79 @@ export class Garage {
 
       const totalPages = Math.ceil(this.totalCars / 7);
       this.prevButton.disabled = this.currentPage === 1;
-      this.nextButton.disabled =
-        this.currentPage === totalPages || cars.length < 7;
+      this.nextButton.disabled = this.currentPage === totalPages || cars.length < 7;
     } catch (error) {
       console.error(error);
     }
   }
 
   private createTrack(car: Car): Node {
-    const trackContainer = doc.createElement('div');
+    const trackContainer = document.createElement('div');
     trackContainer.className = 'track__container';
     trackContainer.setAttribute('data-id', car.id.toString());
 
-    const buttonsContainer = doc.createElement('div');
+    const buttonsContainer = document.createElement('div');
     buttonsContainer.className = 'track__buttons-container';
 
-    const buttonsContainerTop = doc.createElement('div');
+    const buttonsContainerTop = document.createElement('div');
     buttonsContainerTop.className = 'track__buttons-container--top';
 
-    const buttonsContainerBottom = doc.createElement('div');
+    const buttonsContainerBottom = document.createElement('div');
     buttonsContainerBottom.className = 'track__buttons-container--bottom';
 
-    const selectButton = doc.createElement('button');
+    const selectButton = document.createElement('button');
     selectButton.className = 'buttons-container__select';
     selectButton.textContent = 'Select';
-    selectButton.addEventListener('click', () =>
-      this.selectCar(car.id, carName, useElement),
-    );
+    selectButton.addEventListener('click', () => this.selectCar(car.id, carName, useElement));
 
-    const removeButton = doc.createElement('button');
+    const removeButton = document.createElement('button');
     removeButton.className = 'buttons-container__remove';
     removeButton.textContent = 'Remove';
-    removeButton.addEventListener('click', () =>
-      this.removeCar(car.id, trackContainer),
-    );
+    removeButton.addEventListener('click', () => this.removeCar(car.id, trackContainer));
 
-    const carName = doc.createElement('span');
+    const carName = document.createElement('span');
     carName.textContent = car.name;
 
-    const startButton = doc.createElement('button');
+    const startButton = document.createElement('button');
     startButton.className = 'buttons-container__start';
     startButton.textContent = 'A';
-    startButton.addEventListener('click', () =>
-      this.startCar(car.id, carSvg, startButton, stopButton),
-    );
+    startButton.addEventListener('click', () => this.startCar(car.id, carSvg, startButton, stopButton));
 
-    const stopButton = doc.createElement('button');
+    const stopButton = document.createElement('button');
     stopButton.className = 'buttons-container__stop';
     stopButton.textContent = 'B';
     stopButton.disabled = true;
-    stopButton.addEventListener('click', () =>
-      this.stopCar(car.id, carSvg, startButton, stopButton),
-    );
+    stopButton.addEventListener('click', () => this.stopCar(car.id, carSvg, startButton, stopButton));
 
     buttonsContainerTop.append(selectButton, removeButton, carName);
     buttonsContainerBottom.append(startButton, stopButton);
 
     buttonsContainer.append(buttonsContainerTop, buttonsContainerBottom);
 
-    const animationContainer = doc.createElement('div');
+    const animationContainer = document.createElement('div');
     animationContainer.className = 'track__animation-container';
 
-    const carFlagContainer = doc.createElement('div');
+    const carFlagContainer = document.createElement('div');
     carFlagContainer.className = 'car_flag-container';
 
-    const carSvg = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    const carSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     carSvg.setAttribute('width', '60');
     carSvg.setAttribute('height', '60');
-    const useElement = doc.createElementNS('http://www.w3.org/2000/svg', 'use');
+    const useElement = document.createElementNS('http://www.w3.org/2000/svg', 'use');
     useElement.setAttribute('href', '../../sprite.svg#car');
     useElement.setAttribute('fill', car.color);
     useElement.setAttribute('stroke', '#000000');
     useElement.setAttribute('stroke-width', '2');
     carSvg.append(useElement);
 
-    const flagSvg = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    const flagSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     flagSvg.setAttribute('width', '30');
     flagSvg.setAttribute('height', '30');
-    const useFlag = doc.createElementNS('http://www.w3.org/2000/svg', 'use');
+    const useFlag = document.createElementNS('http://www.w3.org/2000/svg', 'use');
     useFlag.setAttribute('href', '../../sprite.svg#flag');
     flagSvg.append(useFlag);
 
-    const road = doc.createElement('div');
+    const road = document.createElement('div');
     road.className = 'track__road';
 
     carFlagContainer.append(carSvg, flagSvg);
@@ -337,9 +291,7 @@ export class Garage {
 
     try {
       const updatedCar = await updateCar(carId, name, color);
-      const track = this.tracksContainer.querySelector(
-        `.track__container[data-id="${carId}"]`,
-      );
+      const track = this.tracksContainer.querySelector(`.track__container[data-id="${carId}"]`);
       if (track) {
         const carName = track.querySelector('span');
         const carSvgUse = track.querySelector('svg use');
@@ -353,10 +305,7 @@ export class Garage {
     }
   }
 
-  private async removeCar(
-    carId: number,
-    trackContainer: HTMLElement,
-  ): Promise<void> {
+  private async removeCar(carId: number, trackContainer: HTMLElement): Promise<void> {
     try {
       await deleteCar(carId);
       await deleteWinner(carId);
@@ -374,11 +323,7 @@ export class Garage {
     }
   }
 
-  private selectCar(
-    carId: number,
-    carNameElement: HTMLSpanElement,
-    carSvgUse: SVGUseElement,
-  ): void {
+  private selectCar(carId: number, carNameElement: HTMLSpanElement, carSvgUse: SVGUseElement): void {
     this.selectedCarId = carId;
     const currentName = carNameElement.textContent || '';
     const currentColor = carSvgUse.getAttribute('fill') || '#3cc8e0';
@@ -420,8 +365,7 @@ export class Garage {
       const { velocity, distance } = await startEngine(carId);
 
       const duration = distance / velocity;
-      const containerWidth =
-        carSvg.parentElement?.parentElement?.clientWidth || 0;
+      const containerWidth = carSvg.parentElement?.parentElement?.clientWidth || 0;
       const carWidth = carSvg.clientWidth;
       const maxTranslate = containerWidth - carWidth - CAR_ANIMATION_OFFSET;
 
@@ -431,7 +375,7 @@ export class Garage {
       const { success } = await driveCar(carId);
 
       if (!success) {
-        const computedStyle = win.getComputedStyle(carSvg);
+        const computedStyle = window.getComputedStyle(carSvg);
         const matrix = new DOMMatrixReadOnly(computedStyle.transform);
         const currentX = matrix.m41;
         carSvg.style.transition = 'none';
@@ -473,8 +417,7 @@ export class Garage {
   private async startRace(): Promise<void> {
     this.resetRace();
     this.disableButtonsDuringRace();
-    const carElements =
-      this.tracksContainer.querySelectorAll('.track__container');
+    const carElements = this.tracksContainer.querySelectorAll('.track__container');
     const racePromises: Promise<{
       id: number;
       time: number;
@@ -484,17 +427,11 @@ export class Garage {
     carElements.forEach((track) => {
       const carId = Number(track.getAttribute('data-id'));
       const carSvg = track.querySelector('svg') as SVGSVGElement;
-      const startButton = track.querySelector(
-        '.buttons-container__start',
-      ) as HTMLButtonElement;
-      const stopButton = track.querySelector(
-        '.buttons-container__stop',
-      ) as HTMLButtonElement;
+      const startButton = track.querySelector('.buttons-container__start') as HTMLButtonElement;
+      const stopButton = track.querySelector('.buttons-container__stop') as HTMLButtonElement;
 
       if (carId && carSvg) {
-        racePromises.push(
-          this.startSingleCar(carId, carSvg, startButton, stopButton),
-        );
+        racePromises.push(this.startSingleCar(carId, carSvg, startButton, stopButton));
       }
     });
 
@@ -511,15 +448,11 @@ export class Garage {
         });
       });
 
-      const winner = await Promise.race([
-        firstFinished,
-        Promise.all(racePromises).then(() => null),
-      ]);
+      const winner = await Promise.race([firstFinished, Promise.all(racePromises).then(() => null)]);
       if (winner) {
         const winnerName =
-          this.tracksContainer.querySelector(
-            `.track__container[data-id="${winner.id}"] span`,
-          )?.textContent || `Car #${winner.id}`;
+          this.tracksContainer.querySelector(`.track__container[data-id="${winner.id}"] span`)?.textContent ||
+          `Car #${winner.id}`;
         this.showWinner(winnerName, winner.time);
 
         await saveWinner(winner.id, winner.time);
@@ -548,8 +481,7 @@ export class Garage {
       const { velocity, distance } = await startEngine(carId);
 
       const duration = distance / velocity;
-      const containerWidth =
-        carSvg.parentElement?.parentElement?.clientWidth || 0;
+      const containerWidth = carSvg.parentElement?.parentElement?.clientWidth || 0;
       const carWidth = carSvg.clientWidth;
       const maxTranslate = containerWidth - carWidth - CAR_ANIMATION_OFFSET;
 
@@ -559,7 +491,7 @@ export class Garage {
       const { success } = await driveCar(carId);
 
       if (!success) {
-        const computedStyle = win.getComputedStyle(carSvg);
+        const computedStyle = window.getComputedStyle(carSvg);
         const matrix = new DOMMatrixReadOnly(computedStyle.transform);
         const currentX = matrix.m41;
         carSvg.style.transition = 'none';
@@ -580,16 +512,11 @@ export class Garage {
   }
 
   private resetRace(): void {
-    const carElements =
-      this.tracksContainer.querySelectorAll('.track__container');
+    const carElements = this.tracksContainer.querySelectorAll('.track__container');
     carElements.forEach((track) => {
       const carSvg = track.querySelector('svg') as SVGSVGElement;
-      const startButton = track.querySelector(
-        '.buttons-container__start',
-      ) as HTMLButtonElement;
-      const stopButton = track.querySelector(
-        '.buttons-container__stop',
-      ) as HTMLButtonElement;
+      const startButton = track.querySelector('.buttons-container__start') as HTMLButtonElement;
+      const stopButton = track.querySelector('.buttons-container__stop') as HTMLButtonElement;
 
       if (carSvg) {
         carSvg.style.transition = 'transform 0.3s ease-out';
@@ -604,31 +531,21 @@ export class Garage {
     this.enableButtonsAfterRace();
   }
   private showWinner(winnerName: string, time: number): void {
-    const winnerMessage = doc.createElement('div');
+    const winnerMessage = document.createElement('div');
     winnerMessage.className = 'winner-message';
     winnerMessage.textContent = `Winner: ${winnerName}, Time: ${(time / 1000).toFixed(2)}s`;
 
-    const page = doc.querySelector('.page') as HTMLElement;
+    const page = document.querySelector('.page') as HTMLElement;
     page.appendChild(winnerMessage);
     setTimeout(() => {
       winnerMessage.remove();
     }, 5000);
   }
   private disableButtonsDuringRace(): void {
-    disableButtonsDuringRace(
-      this.tracksContainer,
-      this.prevButton,
-      this.nextButton,
-    );
+    disableButtonsDuringRace(this.tracksContainer, this.prevButton, this.nextButton);
   }
 
   private enableButtonsAfterRace(): void {
-    enableButtonsAfterRace(
-      this.tracksContainer,
-      this.prevButton,
-      this.nextButton,
-      this.totalCars,
-      this.currentPage,
-    );
+    enableButtonsAfterRace(this.tracksContainer, this.prevButton, this.nextButton, this.totalCars, this.currentPage);
   }
 }

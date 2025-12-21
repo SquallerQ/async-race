@@ -10,8 +10,11 @@ Note that the application requires the backend API server to be running (see API
 ## 🖥️ Screenshots
 
 <div align="center">
-  <img src="public/screenshot1.png" alt="Async Race Garage" width="45%">
-  <img src="public/screenshot2.png" alt="Async Race Winners" width="45%">
+  <img src="public/screenshot1.png" alt="Async Race Garage" width="80%">
+</div>
+
+<div align="center">
+  <img src="public/screenshot2.png" alt="Async Race Winners" width="80%">
 </div>
 
 ## Features

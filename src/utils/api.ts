@@ -1,14 +1,6 @@
-import { fetch } from '../browserTypes';
 import { Car, Winner } from '../types';
-import { console } from '../browserTypes';
-export const fetchCars = async (
-  page: number = 1,
-  limit: number = 7,
-): Promise<{ cars: Car[]; total: number }> => {
-  const response = await fetch(
-    `http://127.0.0.1:3000/garage?_page=${page}&_limit=${limit}`,
-    { method: 'GET' },
-  );
+export const fetchCars = async (page: number = 1, limit: number = 7): Promise<{ cars: Car[]; total: number }> => {
+  const response = await fetch(`http://127.0.0.1:3000/garage?_page=${page}&_limit=${limit}`, { method: 'GET' });
   if (!response.ok) throw new Error('Failed to fetch cars');
   const totalCount = response.headers.get('X-Total-Count');
   const total = totalCount ? parseInt(totalCount, 10) : 0;
@@ -43,34 +35,22 @@ export const deleteWinner = async (id: number): Promise<void> => {
   const response = await fetch(`http://127.0.0.1:3000/winners/${id}`, {
     method: 'DELETE',
   });
-  if (!response.ok && response.status !== 404)
-    throw new Error('Failed to delete winner');
+  if (!response.ok && response.status !== 404) throw new Error('Failed to delete winner');
 };
 
-export const startEngine = async (
-  id: number,
-): Promise<{ velocity: number; distance: number }> => {
-  const response = await fetch(
-    `http://127.0.0.1:3000/engine?id=${id}&status=started`,
-    { method: 'PATCH' },
-  );
+export const startEngine = async (id: number): Promise<{ velocity: number; distance: number }> => {
+  const response = await fetch(`http://127.0.0.1:3000/engine?id=${id}&status=started`, { method: 'PATCH' });
   if (!response.ok) throw new Error('Failed to start engine');
   return await response.json();
 };
 
 export const stopEngine = async (id: number): Promise<void> => {
-  const response = await fetch(
-    `http://127.0.0.1:3000/engine?id=${id}&status=stopped`,
-    { method: 'PATCH' },
-  );
+  const response = await fetch(`http://127.0.0.1:3000/engine?id=${id}&status=stopped`, { method: 'PATCH' });
   if (!response.ok) throw new Error('Failed to stop engine');
 };
 
 export const driveCar = async (id: number): Promise<{ success: boolean }> => {
-  const response = await fetch(
-    `http://127.0.0.1:3000/engine?id=${id}&status=drive`,
-    { method: 'PATCH' },
-  );
+  const response = await fetch(`http://127.0.0.1:3000/engine?id=${id}&status=drive`, { method: 'PATCH' });
   if (!response.ok) {
     if (response.status === 500) return { success: false };
     throw new Error(await response.text());
@@ -100,10 +80,7 @@ export const fetchWinners = async (
   }
 };
 
-export const saveWinner = async (
-  carId: number,
-  time: number,
-): Promise<void> => {
+export const saveWinner = async (carId: number, time: number): Promise<void> => {
   try {
     const response = await fetch(`http://127.0.0.1:3000/winners/${carId}`, {
       method: 'GET',
@@ -129,11 +106,7 @@ export const saveWinner = async (
   }
 };
 
-export const updateCar = async (
-  carId: number,
-  name: string,
-  color: string,
-): Promise<Car> => {
+export const updateCar = async (carId: number, name: string, color: string): Promise<Car> => {
   const response = await fetch(`http://127.0.0.1:3000/garage/${carId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },

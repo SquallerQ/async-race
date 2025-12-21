@@ -1,6 +1,5 @@
 import { Garage } from './pages/Garage';
 import { Winners } from './pages/Winners';
-import { win, doc, hist, HTMLElement } from './browserTypes';
 
 export class Router {
   private pages: {
@@ -11,24 +10,24 @@ export class Router {
   constructor() {
     this.pages['/garage'] = { instance: new Garage(this), element: null! };
     this.pages['/winners'] = { instance: new Winners(this), element: null! };
-    win.addEventListener('popstate', () => this.renderPage());
+    window.addEventListener('popstate', () => this.renderPage());
     this.navigateTo('garage');
   }
 
   public navigateTo(page: string, state: { [key: string]: any } = {}): void {
-    hist.pushState(state, '', `/${page}`);
+    history.pushState(state, '', `/${page}`);
     this.renderPage();
   }
 
   public getState(): { [key: string]: any } {
-    return hist.state || {};
+    return history.state || {};
   }
   public getPageInstance(path: string): Garage | Winners | undefined {
     return this.pages[path]?.instance;
   }
 
   private renderPage(): void {
-    const path = win.location.pathname;
+    const path = window.location.pathname;
     if (this.currentPath === path) return;
 
     if (this.currentPath && this.pages[this.currentPath]) {
@@ -38,10 +37,8 @@ export class Router {
     this.currentPath = path;
 
     if (!this.pages[path].element) {
-      this.pages[path].element = this.pages[
-        path
-      ].instance.render() as HTMLElement;
-      doc.body.appendChild(this.pages[path].element);
+      this.pages[path].element = this.pages[path].instance.render() as HTMLElement;
+      document.body.appendChild(this.pages[path].element);
     } else {
       this.pages[path].element.style.display = 'block';
     }

@@ -1,11 +1,4 @@
 import { Router } from '../router';
-import {
-  doc,
-  HTMLElement,
-  HTMLSpanElement,
-  HTMLButtonElement,
-  console,
-} from '../browserTypes';
 import { fetchWinners, fetchCar } from '../utils/api';
 import { WINNERS_TABLE_HEADERS, WINNERS_PER_PAGE } from '../utils/constants';
 
@@ -26,28 +19,28 @@ export class Winners {
     this.router = router;
     this.garagePage = router.getState().currentPage || 1;
     this.currentPage = 1;
-    this.title = doc.createElement('h1');
-    this.pageIndicator = doc.createElement('span');
-    this.prevButton = doc.createElement('button');
-    this.nextButton = doc.createElement('button');
-    this.winnersTable = doc.createElement('table');
+    this.title = document.createElement('h1');
+    this.pageIndicator = document.createElement('span');
+    this.prevButton = document.createElement('button');
+    this.nextButton = document.createElement('button');
+    this.winnersTable = document.createElement('table');
   }
 
   public render(): Node {
-    const container = doc.createElement('div');
+    const container = document.createElement('div');
     container.className = 'page winners-page';
 
-    const routerButtonsContainer = doc.createElement('div');
+    const routerButtonsContainer = document.createElement('div');
     routerButtonsContainer.className = 'router-buttons__container';
 
-    const goToGarage = doc.createElement('button');
+    const goToGarage = document.createElement('button');
     goToGarage.className = 'router-buttons__button';
     goToGarage.textContent = 'To Garage';
     goToGarage.addEventListener('click', () => {
       this.router.navigateTo('garage', { currentPage: this.garagePage });
     });
 
-    const goToWinnersButton = doc.createElement('button');
+    const goToWinnersButton = document.createElement('button');
     goToWinnersButton.className = 'router-buttons__button';
     goToWinnersButton.textContent = 'To Winners';
     goToWinnersButton.disabled = true;
@@ -58,36 +51,30 @@ export class Winners {
     this.pageIndicator.className = 'actual__page';
     this.pageIndicator.textContent = `Page ${this.currentPage}`;
 
-    const paginationContainer = doc.createElement('div');
+    const paginationContainer = document.createElement('div');
     paginationContainer.className = 'pagination';
 
     this.prevButton.textContent = 'Previous';
     this.prevButton.className = 'pagination__button';
-    this.prevButton.addEventListener('click', () =>
-      this.loadWinners(this.currentPage - 1),
-    );
+    this.prevButton.addEventListener('click', () => this.loadWinners(this.currentPage - 1));
 
     this.nextButton.textContent = 'Next';
     this.nextButton.className = 'pagination__button';
-    this.nextButton.addEventListener('click', () =>
-      this.loadWinners(this.currentPage + 1),
-    );
+    this.nextButton.addEventListener('click', () => this.loadWinners(this.currentPage + 1));
 
     paginationContainer.append(this.prevButton, this.nextButton);
 
     this.winnersTable.className = 'winners-table';
-    const thead = doc.createElement('thead');
-    const headerRow = doc.createElement('tr');
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
 
     WINNERS_TABLE_HEADERS.forEach((header) => {
-      const th = doc.createElement('th');
+      const th = document.createElement('th');
       th.textContent = header.text;
       if (header.sortable && header.key) {
         th.classList.add('sortable');
         th.setAttribute('data-sort', header.key);
-        th.addEventListener('click', () =>
-          this.sortTable(header.key as 'wins' | 'time'),
-        );
+        th.addEventListener('click', () => this.sortTable(header.key as 'wins' | 'time'));
       }
       headerRow.append(th);
     });
@@ -95,13 +82,7 @@ export class Winners {
     thead.append(headerRow);
     this.winnersTable.append(thead);
 
-    container.append(
-      routerButtonsContainer,
-      this.title,
-      this.pageIndicator,
-      paginationContainer,
-      this.winnersTable,
-    );
+    container.append(routerButtonsContainer, this.title, this.pageIndicator, paginationContainer, this.winnersTable);
 
     this.loadWinners(this.currentPage);
 
@@ -110,12 +91,7 @@ export class Winners {
 
   private async loadWinners(page: number): Promise<void> {
     try {
-      const { winners, total } = await fetchWinners(
-        page,
-        WINNERS_PER_PAGE,
-        this.sortColumn,
-        this.sortOrder,
-      );
+      const { winners, total } = await fetchWinners(page, WINNERS_PER_PAGE, this.sortColumn, this.sortOrder);
       this.totalWinners = total;
       const totalPages = Math.ceil(this.totalWinners / WINNERS_PER_PAGE);
       if (page < 1 || (this.totalWinners > 0 && page > totalPages)) return;
@@ -124,7 +100,7 @@ export class Winners {
       this.title.textContent = `Winners (${this.totalWinners})`;
       this.pageIndicator.textContent = `Page ${this.currentPage}`;
 
-      const tbody = doc.createElement('tbody');
+      const tbody = document.createElement('tbody');
       tbody.innerHTML = '';
 
       for (let i = 0; i < winners.length; i++) {
@@ -132,19 +108,16 @@ export class Winners {
         const car = await fetchCar(winner.id);
         if (!car) continue;
 
-        const row = doc.createElement('tr');
+        const row = document.createElement('tr');
 
-        const numberCell = doc.createElement('td');
+        const numberCell = document.createElement('td');
         numberCell.textContent = `${(this.currentPage - 1) * WINNERS_PER_PAGE + i + 1}`;
 
-        const carCell = doc.createElement('td');
-        const carSvg = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        const carCell = document.createElement('td');
+        const carSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         carSvg.setAttribute('width', '40');
         carSvg.setAttribute('height', '40');
-        const useElement = doc.createElementNS(
-          'http://www.w3.org/2000/svg',
-          'use',
-        );
+        const useElement = document.createElementNS('http://www.w3.org/2000/svg', 'use');
         useElement.setAttribute('href', '../../sprite.svg#car');
         useElement.setAttribute('fill', car.color);
         useElement.setAttribute('stroke', '#000000');
@@ -152,13 +125,13 @@ export class Winners {
         carSvg.append(useElement);
         carCell.append(carSvg);
 
-        const nameCell = doc.createElement('td');
+        const nameCell = document.createElement('td');
         nameCell.textContent = car.name;
 
-        const winsCell = doc.createElement('td');
+        const winsCell = document.createElement('td');
         winsCell.textContent = `${winner.wins}`;
 
-        const timeCell = doc.createElement('td');
+        const timeCell = document.createElement('td');
         timeCell.textContent = `${(winner.time / 1000).toFixed(2)}`;
 
         row.append(numberCell, carCell, nameCell, winsCell, timeCell);
@@ -185,13 +158,9 @@ export class Winners {
     }
     this.loadWinners(this.currentPage);
   }
-  private updatePaginationButtons(
-    totalPages: number,
-    currentPageItems: number,
-  ): void {
+  private updatePaginationButtons(totalPages: number, currentPageItems: number): void {
     this.prevButton.disabled = this.currentPage === 1;
-    this.nextButton.disabled =
-      this.currentPage === totalPages || currentPageItems < WINNERS_PER_PAGE;
+    this.nextButton.disabled = this.currentPage === totalPages || currentPageItems < WINNERS_PER_PAGE;
   }
 
   public async updateWinners(): Promise<void> {
