@@ -9,6 +9,7 @@ export default [
   eslint.configs.recommended,
   {
     files: ['**/*.ts'],
+    ignores: ['**/*.config.ts'],
     languageOptions: {
       parser: typescriptParser,
       parserOptions: {
